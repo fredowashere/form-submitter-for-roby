@@ -7,7 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "gh-pages": "ng build --output-path docs --base-href /form-submitter-for-roby/"
+    "gh-pages": "ng build --output-path docs --base-href /Form-Submitter-for-Roby/"
   },
   "private": true,
   "dependencies": {

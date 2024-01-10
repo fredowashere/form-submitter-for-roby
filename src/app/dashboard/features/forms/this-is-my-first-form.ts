@@ -25,7 +25,6 @@ import { SharedModule } from 'src/app/shared/shared.module';
                         name="firstName"
                         label="First name"
                         [ngControl]="form.controls.firstName"
-                        [disabled]="true"
                         [floatingLabel]="true"
                     />
         
@@ -33,7 +32,6 @@ import { SharedModule } from 'src/app/shared/shared.module';
                         name="lastName"
                         label="Last name"
                         [ngControl]="form.controls.lastName"
-                        [disabled]="true"
                         [floatingLabel]="true"
                     />
         
@@ -52,7 +50,6 @@ import { SharedModule } from 'src/app/shared/shared.module';
                         label="City"
                         [ngControl]="form.controls.city"
                         [floatingLabel]="true"
-                        [disabled]="disableFields.value!"
                     />
         
                     <app-input
@@ -65,26 +62,11 @@ import { SharedModule } from 'src/app/shared/shared.module';
                 </div>
         
                 <div class="d-flex flex-wrap gap-3 mb-3">
-        
                     <app-input
                         type="checkbox"
                         name="agree"
                         label="Agree to terms and conditions"
                         [ngControl]="form.controls.agree"
-                    />
-        
-                    <app-input
-                        type="checkbox"
-                        name="disableForm"
-                        label="Disable form (reactive approach)"
-                        [ngControl]="disableForm"
-                    />
-        
-                    <app-input
-                        type="checkbox"
-                        name="disableFields"
-                        label="Disable fields (template approach)"
-                        [ngControl]="disableFields"
                     />
                 </div>
         
@@ -99,19 +81,54 @@ import { SharedModule } from 'src/app/shared/shared.module';
                 </div>
             </div>
         </section>
-        
+
         <section class="card shadow">
-    
-            <div class="card-header">
-                <h4 class="m-0">Form value</h4>
-            </div>
-    
-            <div class="card-body">
-    
-                <p>The formatted output of the form value.<br>Fiddle with the inputs to see realtime changes in the form value down below.</p>
-        
-                <pre>{{ getFormattedForm() }}</pre>
-            </div>
+            <app-table
+                #dt
+                [thead]="thead"
+                [tbody]="tbody"
+                [items]="results"
+                [searchable]="['First name', 'Last name', 'Email']"
+                [paginated]="true"
+                [pageSize]="10"
+            >
+
+                <ng-template #thead>
+                    <th sortable="First name" (sort)="dt.sort($event)">First name</th>
+                    <th sortable="Last name" (sort)="dt.sort($event)">Last name</th>
+                    <th sortable="Agree" (sort)="dt.sort($event)">Agree</th>
+                    <th sortable="Email" (sort)="dt.sort($event)">Email</th>
+                    <th sortable="City" (sort)="dt.sort($event)">City</th>
+                    <th sortable="Zip" (sort)="dt.sort($event)">Zip</th>
+                </ng-template>
+
+                <ng-template #tbody let-item let-term$="term$">
+
+                    <td data-label="First name">
+                        <ngb-highlight [result]="item['First name']" [term]="(term$ | async) || ''"/>
+                    </td>
+
+                    <td data-label="Last name">
+                        <ngb-highlight [result]="item['Last name']" [term]="(term$ | async) || ''"/>
+                    </td>
+
+                    <td data-label="Agree">
+                        <ngb-highlight [result]="item['Agree']" [term]="(term$ | async) || ''"/>
+                    </td>
+
+                    <td data-label="Email">
+                        <ngb-highlight [result]="item['Email']" [term]="(term$ | async) || ''"/>
+                    </td>
+
+                    <td data-label="City">
+                        <ngb-highlight [result]="item['City']" [term]="(term$ | async) || ''"/>
+                    </td>
+
+                    <td data-label="Zip">
+                        <ngb-highlight [result]="item['Zip']" [term]="(term$ | async) || ''"/>
+                    </td>
+                </ng-template>
+            </app-table>
         </section>
     </div>
 </div>
@@ -119,17 +136,8 @@ import { SharedModule } from 'src/app/shared/shared.module';
 })
 export class ThisIsMyFirstFormComponent {
 
-    states = []; // imported from autocomplete/mock
-    statesFormatter = (state: any) => state.name;
-    statesFilter = (term: string, state: any) => {
-        return state.name.toLowerCase().indexOf(term.toLowerCase()) > -1;
-    }
-
-    flavorList = []; // imported from tagger/mock
-    flavorsFormatter = (flavor: any) => flavor.name;
-    flavorsFilter = (term: string, flavor: any) => {
-        return flavor.name.toLowerCase().indexOf(term.toLowerCase()) > -1;
-    }
+    intervalId: any = null;
+    results: any[] = [];
 
     form = new FormGroup({
         firstName: new FormControl<string | null>(null),
@@ -140,30 +148,31 @@ export class ThisIsMyFirstFormComponent {
         agree: new FormControl(false, [ Validators.requiredTrue ])
     });
 
-    disableForm = new FormControl(false);
-    disableFields = new FormControl(false);
-
     ngOnInit() {
-        this.disableForm.valueChanges
-            .subscribe(disabled =>
-                disabled
-                    ? this.form.disable()
-                    : this.form.enable()
-            );
+        const updateResults = async () => this.results = await this.loadData();
+        updateResults();
+        this.intervalId = setInterval(updateResults.bind(this), 2000);
+    }
+
+    ngOnDestroy() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+        }
     }
 
     async submit() {
-
         await fetch("https://eoyhpvivfett3ub.m.pipedream.net", {
             method: "POST",
             body: JSON.stringify(this.form.getRawValue())
         });
-
-        alert("Submitted!");
     }
 
     getFormattedForm() {
         return JSON.stringify(this.form.getRawValue(), null, 4);
+    }
+
+    async loadData() {
+        return await (await fetch("https://eoy6t4x2oybru9.m.pipedream.net")).json();
     }
 
 }
