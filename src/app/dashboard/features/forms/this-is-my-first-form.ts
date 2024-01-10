@@ -136,7 +136,6 @@ import { SharedModule } from 'src/app/shared/shared.module';
 })
 export class ThisIsMyFirstFormComponent {
 
-    intervalId: any = null;
     results: any[] = [];
 
     form = new FormGroup({
@@ -148,33 +147,26 @@ export class ThisIsMyFirstFormComponent {
         agree: new FormControl(false, [ Validators.requiredTrue ])
     });
 
-    ngOnInit() {
-        const updateResults = async () => this.results = await this.loadData();
-        updateResults();
-        this.intervalId = setInterval(updateResults.bind(this), 2000);
-    }
-
-    ngOnDestroy() {
-        if (this.intervalId) {
-            clearInterval(this.intervalId);
-        }
+    async ngOnInit() {
+        this.results = await this.getItems();
     }
 
     async submit() {
-        await fetch("https://eoyhpvivfett3ub.m.pipedream.net", {
+
+        await fetch("https://eowswxdm5j3l8fy.m.pipedream.net", {
             method: "POST",
             body: JSON.stringify(this.form.getRawValue())
         });
+
+        this.results = await this.getItems();
+
+        alert("Form submitted!");
     }
 
-    getFormattedForm() {
-        return JSON.stringify(this.form.getRawValue(), null, 4);
+    async getItems() {
+        const results = await fetch("https://eoybkzl6ih8jzlw.m.pipedream.net");
+        return await results.json();
     }
-
-    async loadData() {
-        return await (await fetch("https://eoy6t4x2oybru9.m.pipedream.net")).json();
-    }
-
 }
 
 @NgModule({
